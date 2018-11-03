@@ -6,3 +6,5 @@
 
 ### TODO: [Frontend Deployment with gh-pages]()
 
+installation: create .env file with connection string MONGO_URI=mongodb://...
+

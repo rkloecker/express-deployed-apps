@@ -25,6 +25,7 @@ const AppModel = require("./models/appModel");
 // Connect to Mongoose
 // const mongoURI = process.env.MLABKEY;
 const mongoURI = process.env.MONGO_URI;
+// const mongoURI = process.env.MONGO_LOCAL;
 
 mongoose.connect(
   mongoURI,
@@ -32,28 +33,9 @@ mongoose.connect(
 );
 var db = mongoose.connection;
 
-// //check valid with regex
-// const isValid = (str) => {
-// 	return !/[^a-zäöüß,-\s]/i.test(str);
-// }
-
-app.get("/", (req, res) => {
-  res.send("Please use /api/apps");
-});
-
-//READ All records  or query if there is a query string
-app.get("/api/apps", (req, res) => {
-  AppModel.getApps((err, _apps) => {
-    if (err) {
-      throw err;
-    }
-    res.json(_apps);
-  });
-});
-
 //READ Single Record
 app.get("/api/apps/:_id", (req, res) => {
-  AppModel.getAppById(req.params._id, (err, _app) => {
+  AppModel.findById({ _id: req.params._id }, (err, _app) => {
     if (err) {
       throw err;
     }
@@ -61,7 +43,17 @@ app.get("/api/apps/:_id", (req, res) => {
   });
 });
 
-//CREATE
+//READ All records
+app.get("/api/apps", (req, res) => {
+  AppModel.find((err, _apps) => {
+    if (err) {
+      throw err;
+    }
+    res.json(_apps);
+  });
+});
+
+//CREATE an App
 app.post("/api/apps", (req, res) => {
   if (!req.body) {
     return console.log("no body");
@@ -73,10 +65,12 @@ app.post("/api/apps", (req, res) => {
     !_app.description_short ||
     !_app.url
   ) {
-    return console.log("no eng or no german or no description");
+    return console.log(
+      "no title or no description_long or no description_short or no url"
+    );
   }
 
-  AppModel.addApp(_app, (err, _app) => {
+  AppModel.create(_app, (err, _app) => {
     if (err) {
       throw err;
     }
@@ -84,7 +78,7 @@ app.post("/api/apps", (req, res) => {
   });
 });
 
-//UPDATE - use PUT when sending the whole entity - use PATCH when sending only fields that changed
+//UPDATE an App - use PUT when sending the whole entity - use PATCH when sending only fields that changed
 app.put("/api/apps/:_id", (req, res) => {
   if (!req.body) {
     return console.log("no body");
@@ -98,24 +92,26 @@ app.put("/api/apps/:_id", (req, res) => {
   ) {
     return console.log("no eng or no german or no description");
   }
-  // console.log("update");
-  // console.log(word);
-  // console.log(req.params._id);
-  AppModel.updateApp(req.params._id, _app, {}, (err, _app) => {
-    if (err) {
-      throw err;
+
+  AppModel.findOneAndUpdate(
+    { _id: req.params._id },
+    req.body,
+    {},
+    (err, _app) => {
+      if (err) {
+        throw err;
+      }
+      res.json(_app);
     }
-    res.json(_app);
-  });
+  );
 });
 
-//DELETE
+//DELETE an App
 app.delete("/api/apps/:_id", (req, res) => {
   if (!req.params._id) {
     return console.log("no id");
   }
-  const id = req.params._id;
-  AppModel.removeApp(id, (err, _app) => {
+  AppModel.remove({ _id: req.params._id }, (err, _app) => {
     if (err) {
       throw err;
     }
